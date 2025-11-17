@@ -1,0 +1,38 @@
+"""Infoblox WAPI client module."""
+import httpx
+from config import WAPI_URL, WAPI_USER, WAPI_PASS
+
+class InfobloxClient:
+    """Simple client for Infoblox WAPI interactions."""
+
+    def __init__(self):
+        """Initialize the InfobloxClient with connection parameters."""
+        self.base_url = WAPI_URL.rstrip("/")
+        self.auth = (WAPI_USER, WAPI_PASS)
+        self.headers = {"Accept": "application/json"}
+
+    async def get_zones(self):
+        """Retrieve all authoritative DNS zones."""
+        async with httpx.AsyncClient(verify=False) as client:
+            resp = await client.get(f"{self.base_url}/zone_auth", auth=self.auth, headers=self.headers)
+            resp.raise_for_status()
+            return resp.json()
+
+    async def get_records(self, zone: str):
+        """Retrieve all A records in a specific zone."""
+        async with httpx.AsyncClient(verify=False) as client:
+            resp = await client.get(
+                f"{self.base_url}/record:a",  # Pode adaptar para record:cname, record:ptr etc.
+                params={"zone": zone},
+                auth=self.auth,
+                headers=self.headers
+            )
+            resp.raise_for_status()
+            return resp.json()
+
+    async def get_grid_members(self):
+        """Retrieve all Grid Members and their statuses."""
+        async with httpx.AsyncClient(verify=False) as client:
+            resp = await client.get(f"{self.base_url}/member", auth=self.auth, headers=self.headers)
+            resp.raise_for_status()
+            return resp.json()

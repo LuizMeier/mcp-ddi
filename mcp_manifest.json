@@ -1,0 +1,31 @@
+{
+  "schema_version": "v1",
+  "name": "infoblox-ddi-mcp",
+  "version": "0.1.0",
+  "description": "MCP connector for Infoblox DDI. Provides DNS and Grid Member queries.",
+  "contact_email": "seu-email@empresa.com",
+  "legal_info_url": "https://sua-empresa.com/legal",
+  "tools": [
+    {
+      "name": "list_zones",
+      "description": "List all DNS zones from Infoblox.",
+      "input_schema": { "type": "object", "properties": {} }
+    },
+    {
+      "name": "list_records",
+      "description": "List DNS records from a specific zone.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "zone": { "type": "string" }
+        },
+        "required": ["zone"]
+      }
+    },
+    {
+      "name": "list_grid_members",
+      "description": "Return information about Infoblox grid members.",
+      "input_schema": { "type": "object", "properties": {} }
+    }
+  ]
+}
