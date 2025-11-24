@@ -26,6 +26,11 @@
       "name": "list_grid_members",
       "description": "Return information about Infoblox grid members.",
       "input_schema": { "type": "object", "properties": {} }
+    },
+    {
+      "name": "list_breeds",
+      "description": "List all Dog Breeds from the Dog API.",
+      "input_schema": { "type": "object", "properties": {} }
     }
   ]
 }

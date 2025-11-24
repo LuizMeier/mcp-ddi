@@ -14,7 +14,9 @@ class InfobloxClient:
     async def get_zones(self):
         """Retrieve all authoritative DNS zones."""
         async with httpx.AsyncClient(verify=False) as client:
-            resp = await client.get(f"{self.base_url}/zone_auth", auth=self.auth, headers=self.headers)
+            resp = await client.get(
+                f"{self.base_url}/zone_auth", auth=self.auth, headers=self.headers  # pylint: disable=line-too-long
+            )
             resp.raise_for_status()
             return resp.json()
 
@@ -34,5 +36,12 @@ class InfobloxClient:
         """Retrieve all Grid Members and their statuses."""
         async with httpx.AsyncClient(verify=False) as client:
             resp = await client.get(f"{self.base_url}/member", auth=self.auth, headers=self.headers)
+            resp.raise_for_status()
+            return resp.json()
+
+    async def get_breeds(self):
+        """Retrieve all Breeds."""
+        async with httpx.AsyncClient(verify=False) as client:
+            resp = await client.get("https://dogapi.dog/api/v2/breeds")
             resp.raise_for_status()
             return resp.json()

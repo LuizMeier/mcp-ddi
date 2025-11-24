@@ -1,138 +1,80 @@
-"""Main application module for Infoblox MCP Connector."""
+"""
+FastMCP quickstart example.
+
+Run from the repository root:
+    uv run examples/snippets/servers/fastmcp_quickstart.py
+"""
+
 import logging
-import os
-import json
-from fastapi import FastAPI, Query, HTTPException, Body
-from fastapi.responses import JSONResponse
-
+from mcp.server.fastmcp import FastMCP
+from fastapi import HTTPException
 from infoblox_client import InfobloxClient
-from models import Zone, DNSRecord, GridMember
 
-# ---------------------------------------------------------------------
-# App Setup
-# ---------------------------------------------------------------------
+# Create an MCP server
+mcp = FastMCP("Demo", json_response=True)
 
-app = FastAPI(title="Infoblox MCP Connector", version="1.0")
+# Create an Infoblox client
+ibClient = InfobloxClient()
 
-client = InfobloxClient()
+# Add an addition tool
+@mcp.tool()
+def add(a: int, b: int) -> int:
+    """Add two numbers"""
+    return a + b
 
-logging.basicConfig(level=logging.INFO)
+# Add Infoblox tools
+@mcp.tool()
+def list_zones():
+    """List all DNS zones"""
+    return [z.name for z in ibClient.get_zones()]
+
+@mcp.tool()
+def list_records(zone: str):
+    """List all DNS records in a zone"""
+    return [r.model_dump() for r in ibClient.get_records(zone)]
+
+@mcp.tool()
+def list_grid_members():
+    """List all grid members"""
+    return [m.model_dump() for m in ibClient.get_grid_members()]
+
+# Add a test tool that fetches data from an external API
 logger = logging.getLogger("mcp")
 
 
-# ---------------------------------------------------------------------
-# Public API Endpoints
-# ---------------------------------------------------------------------
-
-@app.get("/zones", response_model=list[Zone])
-async def list_zones():
-    """List all authoritative DNS zones."""
+@mcp.tool()
+async def list_breeds():
+    """List all Dog Breeds."""
     try:
-        logger.info("Tool: list_zones() called")
-        return await client.get_zones()
+        data = await ibClient.get_breeds()
+        # Nova estrutura: nomes das raças estão em data[i]['attributes']['name']
+        breeds = [breed['attributes']['name'] for breed in data.get('data', [])]
+        return breeds
     except Exception as e:
-        logger.error(f"Error in list_zones: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error("Error in list_breeds: %s", e)
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
-@app.get("/records", response_model=list[DNSRecord])
-async def list_records(zone: str = Query(..., description="Zone name")):
-    """List all A records in a specific zone."""
-    try:
-        logger.info(f"Tool: list_records(zone={zone}) called")
-        return await client.get_records(zone)
-    except Exception as e:
-        logger.error(f"Error in list_records: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+# Add a dynamic greeting resource
+@mcp.resource("greeting://{name}")
+def get_greeting(name: str) -> str:
+    """Get a personalized greeting"""
+    return f"Hello, {name}!"
 
 
-@app.get("/grid-members", response_model=list[GridMember])
-async def list_grid_members():
-    """List all Grid Members and their statuses."""
-    try:
-        logger.info("Tool: list_grid_members() called")
-        return await client.get_grid_members()
-    except Exception as e:
-        logger.error(f"Error in list_grid_members: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-# ---------------------------------------------------------------------
-# MCP Endpoints
-# ---------------------------------------------------------------------
-
-@app.get("/mcp/")
-async def mcp_root():
-    """Health check endpoint required by MCP."""
-    return {"status": "ok", "message": "Infoblox MCP Connector is running"}
-
-
-@app.get("/mcp/manifest")
-async def manifest():
-    """Returns the MCP manifest file that describes the available tools."""
-    manifest_path = os.path.join(
-        os.path.dirname(__file__),
-        "mcp_manifest.json"
-    )
-
-    if not os.path.exists(manifest_path):
-        raise HTTPException(status_code=500, detail="Manifest file not found")
-
-    with open(manifest_path, "r") as f:
-        return json.load(f)
-
-
-# ---------------------------------------------------------------------
-# MCP Tool Execution Endpoint
-# ---------------------------------------------------------------------
-
-@app.post("/mcp/call")
-async def mcp_call(payload: dict = Body(...)):
-    """
-    Executed by the LLM when asking to use a tool.
-    
-    Payload example:
-    {
-        "tool": "list_records",
-        "arguments": { "zone": "example.com" }
+# Add a prompt
+@mcp.prompt()
+def greet_user(name: str, style: str = "friendly") -> str:
+    """Generate a greeting prompt"""
+    styles = {
+        "friendly": "Please write a warm, friendly greeting",
+        "formal": "Please write a formal, professional greeting",
+        "casual": "Please write a casual, relaxed greeting",
     }
-    """
 
-    tool = payload.get("tool")
-    args = payload.get("arguments", {})
+    return f"{styles.get(style, styles['friendly'])} for someone named {name}."
 
-    logger.info(f"MCP call received: tool={tool}, args={args}")
 
-    if not tool:
-        raise HTTPException(status_code=400, detail="Missing 'tool' field")
-
-    # Map tool name → internal API function
-    try:
-        if tool == "list_zones":
-            result = await list_zones()
-
-        elif tool == "list_records":
-            zone = args.get("zone")
-            if not zone:
-                raise HTTPException(status_code=400, detail="Missing argument: zone")
-            result = await list_records(zone)
-
-        elif tool == "list_grid_members":
-            result = await list_grid_members()
-
-        else:
-            raise HTTPException(status_code=400, detail=f"Unknown tool '{tool}'")
-
-        logger.info(f"Tool '{tool}' executed successfully")
-
-        return JSONResponse(
-            content={"success": True, "data": result},
-            status_code=200
-        )
-
-    except HTTPException:
-        raise
-
-    except Exception as e:
-        logger.error(f"Unhandled error during tool execution: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+# Run with streamable HTTP transport
+if __name__ == "__main__":
+    mcp.run(transport="streamable-http")

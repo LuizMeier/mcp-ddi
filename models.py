@@ -21,3 +21,8 @@ class GridMember(BaseModel):
     ipv4_address: str
     status: Optional[str]
     _ref: str
+
+class Breed(BaseModel):
+    """Model for a Dog Breed."""
+    id: int
+    type: str
