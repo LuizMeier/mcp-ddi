@@ -5,6 +5,7 @@ Run from the repository root:
     uv run examples/snippets/servers/fastmcp_quickstart.py
 """
 
+import json
 import logging
 from mcp.server.fastmcp import FastMCP
 from fastapi import HTTPException
@@ -14,7 +15,7 @@ from infoblox_client import InfobloxClient
 load_dotenv()  # Load the .env file before anything else
 
 # Create an MCP server
-mcp = FastMCP("Demo", json_response=True)
+mcp = FastMCP("Demo", json_response=False)
 
 # Create an Infoblox client
 ibClient = InfobloxClient()
@@ -30,19 +31,22 @@ def add(a: int, b: int) -> int:
 async def list_zones():
     """List all DNS zones"""
     data = await ibClient.get_zones()
-    return [z.name for z in data]
+    zones = [{"fqdn": z.fqdn, "view": z.view, "ref": z.ref} for z in data]
+    return {"zones": zones, "total": len(zones)}
 
 @mcp.tool()
 async def list_records(zone: str):
     """List all DNS records in a zone"""
     data = await ibClient.get_records(zone)
-    return [r.model_dump() for r in data]
+    records = [{"name": r.name, "ipv4addr": r.ipv4addr, "ref": r.ref} for r in data]
+    return {"records": records, "total": len(records), "zone": zone}
 
 @mcp.tool()
 async def list_grid_members():
     """List all grid members"""
     data = await ibClient.get_grid_members()
-    return [m.model_dump() for m in data]
+    members = [{"host_name": m.host_name, "ref": m.ref} for m in data]
+    return {"members": members, "total": len(members)}
 
 @mcp.tool()
 async def list_breeds():
