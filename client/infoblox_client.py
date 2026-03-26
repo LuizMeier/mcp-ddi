@@ -26,7 +26,7 @@ class InfobloxClient:
             # The API returns: [{"_ref": "...", "fqdn": "...", "view": "..."}, ...]
             return [Zone(**zone_data) for zone_data in data]
 
-    async def get_records(self, zone: str, record_type: str = "A"):
+    async def get_records(self, zone: str, record_type: str = "a"):
         """Retrieve records from a specific zone."""
 
         if not zone:
@@ -84,12 +84,7 @@ class InfobloxClient:
     async def get_grid_members(self):
         """Retrieve all Grid Members and their statuses."""
         async with httpx.AsyncClient(verify=False) as client:
-            params = {"_return_fields": "host_name,"
-                "ipv4_address,"
-                "config_addr_type,"
-                "service_type_configuration,"
-                "vip_setting,service_status"
-                }
+            params = {"_return_fields": "host_name,config_addr_type,host_name,platform,service_type_configuration,vip_setting,service_status"}
             resp = await client.get(
                 f"{self.base_url}/member",
                 auth=self.auth,
