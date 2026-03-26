@@ -109,6 +109,31 @@ async def get_zone_summary(zone: str):
         "message": f"Retrieved summary for zone '{zone}' successfully."
     }
 
+@mcp.tool()
+async def get_grid_status():
+    """Get the status of all grid members, including VIP settings and service status."""
+    status = await dns_service.get_grid_status()
+    return {
+        "operation": "get_grid_status",
+        "success": True,
+        "total": len(status["members"]),
+        "results": status["members"],
+        "summary": status["summary"],
+        "message": f"Retrieved grid status for {len(status['members'])} members successfully."
+    }
+
+@mcp.tool()
+async def get_dns_overview():
+    """Get an overview of the DNS environment, including zones, records, and grid member statuses."""
+    overview = await dns_service.get_dns_overview()
+    return {
+        "operation": "get_dns_overview",
+        "success": True,
+        "total": len(overview["results"]["zones"]),
+        "results": overview,
+        "message": overview["message"]
+    }
+
 # Run with streamable HTTP transport
 if __name__ == "__main__":
     mcp.run(transport="streamable-http")

@@ -12,12 +12,18 @@ Build a DNS Operations Assistant using MCP and Infoblox DDI.
   - search_dns_record
   - check_ip_usage
   - get_zone_summary
+  - get_grid_status
+  - get_dns_overview
 - Week 1 status: completed
 - Week 2 status: completed
 - Week 3 status: completed
+- Week 4 status: completed
+- Week 5 status: completed
+- Week 6 status: in progress
 - Ref modeling status: corrected to use internal `ref` with DDI alias `_ref`
 - MCP response contract: use `ref` externally, not `_ref`
 - Response format status: standardized across current MCP tools
+- Grid member payload note: `service_status` is a list of per-service status objects; `vip_setting` is a single nested object
 - Architecture:
   - main.py → MCP layer
   - services → business logic
@@ -54,9 +60,8 @@ Build a DNS Operations Assistant using MCP and Infoblox DDI.
 
 ### Week 6 — Content
 - Session 11: Create examples
-- Session 12: Write blog post draft
 
 ---
 
 ## Next Steps
-- Implement get_grid_status
+- TBD

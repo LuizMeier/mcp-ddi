@@ -19,11 +19,30 @@ class DNSRecord(BaseModel):
     # Allow using 'ref' instead of '_ref' when creating instances
     model_config = ConfigDict(populate_by_name=True)
 
+class ServiceStatus(BaseModel):
+    """Model for service status."""
+    description: str
+    service: str
+    status: str
+
+class VipSetting(BaseModel):
+    """Model for VIP settings."""
+    address: str
+    dscp: int
+    gateway: str
+    primary: bool
+    subnet_mask: str
+    use_dscp: bool
+
 class GridMember(BaseModel):
     """Model for a Grid Member."""
     host_name: str
     ipv4_address: str
-    status: Optional[str]
+    config_addr_type: Optional[str]
     ref: str = Field(alias="_ref")
+    platform: Optional[str]
+    service_type_configuration: Optional[str]
+    vip_setting: Optional[VipSetting]
+    service_status: list[ServiceStatus] = Field(default_factory=list)
     # Allow using 'ref' instead of '_ref' when creating instances
     model_config = ConfigDict(populate_by_name=True)

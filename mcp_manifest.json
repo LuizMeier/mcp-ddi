@@ -60,6 +60,16 @@
         },
         "required": ["zone"]
       }
+    },
+    {
+      "name": "get_grid_status",
+      "description": "Get the status of all grid members, including VIP settings and service status.",
+      "input_schema": { "type": "object", "properties": {} }
+    },
+    {
+      "name": "get_dns_overview",
+      "description": "Get an overview of the DNS environment, including zones, record counts, and grid member statuses.",
+      "input_schema": { "type": "object", "properties": {} }
     }
   ]
 }

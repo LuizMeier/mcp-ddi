@@ -84,7 +84,18 @@ class InfobloxClient:
     async def get_grid_members(self):
         """Retrieve all Grid Members and their statuses."""
         async with httpx.AsyncClient(verify=False) as client:
-            resp = await client.get(f"{self.base_url}/member", auth=self.auth, headers=self.headers)
+            params = {"_return_fields": "host_name,"
+                "ipv4_address,"
+                "config_addr_type,"
+                "service_type_configuration,"
+                "vip_setting,service_status"
+                }
+            resp = await client.get(
+                f"{self.base_url}/member",
+                auth=self.auth,
+                headers=self.headers,
+                params=params
+                )
             resp.raise_for_status()
             data = resp.json()
             # Convert list of dictionaries to list of GridMember objects
