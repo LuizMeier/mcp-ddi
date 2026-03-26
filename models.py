@@ -21,7 +21,7 @@ class DNSRecord(BaseModel):
 
 class ServiceStatus(BaseModel):
     """Model for service status."""
-    description: str
+    description: Optional[str] = None
     service: str
     status: str
 
@@ -37,7 +37,6 @@ class VipSetting(BaseModel):
 class GridMember(BaseModel):
     """Model for a Grid Member."""
     host_name: str
-    ipv4_address: str
     config_addr_type: Optional[str]
     ref: str = Field(alias="_ref")
     platform: Optional[str]

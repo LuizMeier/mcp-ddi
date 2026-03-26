@@ -54,8 +54,7 @@ class DNSOperationsService:
         data = await self.client.get_grid_members()
         return [
             {"host_name": m.host_name,
-             "ref": m.ref,
-             "ipv4_address": m.ipv4_address}
+             "ref": m.ref}
             for m in data
         ]
 
