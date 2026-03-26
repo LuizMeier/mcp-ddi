@@ -70,6 +70,38 @@ python3 main.py
 
 The server uses FastMCP with `streamable-http` transport.
 
+By default, the MCP endpoint is exposed at:
+
+```text
+http://localhost:8000/mcp
+```
+
+## MCP Client Configuration
+
+This server is not configured as a stdio MCP process. It runs as an HTTP server using `streamable-http`.
+
+That means you must start the server manually before connecting your LLM client to it:
+
+```bash
+python3 main.py
+```
+
+Once the server is running, configure your MCP client with an HTTP entry similar to:
+
+```json
+{
+  "mcpServers": {
+    "DDI": {
+      "type": "http",
+      "url": "http://localhost:8000/mcp",
+      "description": "DDI MCP Server"
+    }
+  }
+}
+```
+
+If your client supports environment variables only for local process launches, note that in HTTP mode those variables must already be available in the shell or environment where `main.py` is started.
+
 ## Tool Summary
 
 ### DNS
