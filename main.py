@@ -1,88 +1,138 @@
 """
-FastMCP quickstart example.
-
-Run from the repository root:
-    uv run examples/snippets/servers/fastmcp_quickstart.py
+Infoblox MCP Server
 """
 
-import json
-import logging
 from mcp.server.fastmcp import FastMCP
-from fastapi import HTTPException
 from dotenv import load_dotenv
-from infoblox_client import InfobloxClient
+from client.infoblox_client import InfobloxClient
+from services.dns_operations import DNSOperationsService
 
 load_dotenv()  # Load the .env file before anything else
 
+ib_client = InfobloxClient()
+dns_service = DNSOperationsService(ib_client)
+
 # Create an MCP server
-mcp = FastMCP("Demo", json_response=False)
+mcp = FastMCP("Infoblox", json_response=False)
 
-# Create an Infoblox client
-ibClient = InfobloxClient()
-
-# Add an addition tool
-@mcp.tool()
-def add(a: int, b: int) -> int:
-    """Add two numbers"""
-    return a + b
-
-# Add Infoblox tools
 @mcp.tool()
 async def list_zones():
     """List all DNS zones"""
-    data = await ibClient.get_zones()
-    zones = [{"fqdn": z.fqdn, "view": z.view, "ref": z.ref} for z in data]
-    return {"zones": zones, "total": len(zones)}
+    zones = await dns_service.list_zones()
+    return {
+        "operation": "list_zones",
+        "success": True,
+        "total": len(zones),
+        "results": zones,
+        "message": f"Retrieved {len(zones)} zones successfully."
+    }
 
 @mcp.tool()
 async def list_records(zone: str):
     """List all DNS records in a zone"""
-    data = await ibClient.get_records(zone)
-    records = [{"name": r.name, "ipv4addr": r.ipv4addr, "ref": r.ref} for r in data]
-    return {"records": records, "total": len(records), "zone": zone}
+    records = await dns_service.list_records(zone)
+    return {
+        "operation": "list_records",
+        "success": True,
+        "total": len(records),
+        "results": records,
+        "message": f"Retrieved {len(records)} records successfully."
+    }
 
 @mcp.tool()
 async def list_grid_members():
     """List all grid members"""
-    data = await ibClient.get_grid_members()
-    members = [{"host_name": m.host_name, "ref": m.ref} for m in data]
-    return {"members": members, "total": len(members)}
-
-@mcp.tool()
-async def list_breeds():
-    """List all Dog Breeds."""
-    try:
-        data = await ibClient.get_breeds()
-        # New structure: breed names are in data[i]['attributes']['name']
-        breeds = [breed['attributes']['name'] for breed in data.get('data', [])]
-        return breeds
-    except Exception as e:
-        logger.error("Error in list_breeds: %s", e)
-        raise HTTPException(status_code=500, detail=str(e)) from e
-
-# Add a test tool that fetches data from an external API
-logger = logging.getLogger("mcp")
-
-
-# Add a dynamic greeting resource
-@mcp.resource("greeting://{name}")
-def get_greeting(name: str) -> str:
-    """Get a personalized greeting"""
-    return f"Hello, {name}!"
-
-
-# Add a prompt
-@mcp.prompt()
-def greet_user(name: str, style: str = "friendly") -> str:
-    """Generate a greeting prompt"""
-    styles = {
-        "friendly": "Please write a warm, friendly greeting",
-        "formal": "Please write a formal, professional greeting",
-        "casual": "Please write a casual, relaxed greeting",
+    members = await dns_service.list_grid_members()
+    return {
+        "operation": "list_grid_members",
+        "success": True,
+        "total": len(members),
+        "results": members,
+        "message": f"Retrieved {len(members)} grid members successfully."
     }
 
-    return f"{styles.get(style, styles['friendly'])} for someone named {name}."
+@mcp.tool()
+async def search_dns_record(query: str, zone: str | None = None):
+    """Search DNS A records by IP address, host name, or FQDN."""
+    results = await dns_service.search_dns_record(query, zone)
+    return {
+        "operation": "search_dns_record",
+        "success": True,
+        "total": len(results),
+        "results": results,
+        "message": f"Retrieved {len(results)} matching record(s) successfully."
+    }
 
+@mcp.tool()
+async def health():
+    """Check if the MCP server is healthy"""
+    return {
+        "operation": "health",
+        "success": True,
+        "total": 1,
+        "results": [{"status": "healthy"}],
+        "message": "MCP server is healthy."
+    }
+
+@mcp.tool()
+async def check_ip_usage(ip: str):
+    """Check whether an IP address is currently used by DNS A records."""
+    usage = await dns_service.check_ip_usage(ip)
+    results = usage["results"]
+    status = usage["status"]
+
+    if status == "unused":
+        message = "IP address is not currently used by any DNS A record."
+    elif status == "in_use":
+        message = "IP address is currently used by 1 DNS A record."
+    else:
+        message = f"IP address is currently used by {len(results)} DNS A records."
+
+    return {
+        "operation": "check_ip_usage",
+        "success": True,
+        "status": status,
+        "total": len(results),
+        "results": results,
+        "message": message,
+    }
+
+@mcp.tool()
+async def get_zone_summary(zone: str):
+    """Get a summary of a DNS zone"""
+    summary = await dns_service.get_zone_summary(zone)
+    return {
+        "operation": "get_zone_summary",
+        "success": True,
+        "total": 1,
+        "results": [summary],
+        "message": f"Retrieved summary for zone '{zone}' successfully."
+    }
+
+@mcp.tool()
+async def get_grid_status():
+    """Get the status of all grid members, including VIP settings and service status."""
+    status = await dns_service.get_grid_status()
+    return {
+        "operation": "get_grid_status",
+        "success": True,
+        "total": len(status["members"]),
+        "results": status["members"],
+        "summary": status["summary"],
+        "message": f"Retrieved grid status for {len(status['members'])} members successfully."
+    }
+
+@mcp.tool()
+async def get_dns_overview():
+    """Get an overview of the DNS environment, including zones, records, and grid member statuses."""
+    overview = await dns_service.get_dns_overview()
+    return {
+        "operation": "get_dns_overview",
+        "success": True,
+        "total": len(overview["results"]["zones"]),
+        "results": overview,
+        "message": overview["message"]
+    }
 
 # Run with streamable HTTP transport
 if __name__ == "__main__":

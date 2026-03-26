@@ -28,8 +28,47 @@
       "input_schema": { "type": "object", "properties": {} }
     },
     {
-      "name": "list_breeds",
-      "description": "List all Dog Breeds from the Dog API.",
+      "name": "search_dns_record",
+      "description": "Search DNS A records by IP address, host name, or FQDN.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "query": { "type": "string" },
+          "zone": { "type": "string" }
+        },
+        "required": ["query"]
+      }
+    },
+    {
+      "name": "check_ip_usage",
+      "description": "Check whether an IP address is currently used by DNS A records.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "ip": { "type": "string" }
+        },
+        "required": ["ip"]
+      }
+    },
+    {
+      "name": "get_zone_summary",
+      "description": "Get a summary of DNS records in a zone.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "zone": { "type": "string" }
+        },
+        "required": ["zone"]
+      }
+    },
+    {
+      "name": "get_grid_status",
+      "description": "Get the status of all grid members, including VIP settings and service status.",
+      "input_schema": { "type": "object", "properties": {} }
+    },
+    {
+      "name": "get_dns_overview",
+      "description": "Get an overview of the DNS environment, including zones, record counts, and grid member statuses.",
       "input_schema": { "type": "object", "properties": {} }
     }
   ]
