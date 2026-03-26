@@ -14,7 +14,7 @@ class DNSRecord(BaseModel):
     """Model for a DNS A record."""
     name: str
     ipv4addr: str
-    zone: Optional[str]
+    zone: Optional[str] = None
     ref: str = Field(alias="_ref")
     # Allow using 'ref' instead of '_ref' when creating instances
     model_config = ConfigDict(populate_by_name=True)
