@@ -20,8 +20,11 @@ async def list_zones():
     """List all DNS zones"""
     zones = await dns_service.list_zones()
     return {
-        "zones": zones,
-        "total": len(zones)
+        "operation": "list_zones",
+        "success": True,
+        "total": len(zones),
+        "results": zones,
+        "message": f"Retrieved {len(zones)} zones successfully."
     }
 
 @mcp.tool()
@@ -29,9 +32,11 @@ async def list_records(zone: str):
     """List all DNS records in a zone"""
     records = await dns_service.list_records(zone)
     return {
-        "records": records,
+        "operation": "list_records",
+        "success": True,
         "total": len(records),
-        "zone": zone
+        "results": records,
+        "message": f"Retrieved {len(records)} records successfully."
     }
 
 @mcp.tool()
@@ -39,8 +44,69 @@ async def list_grid_members():
     """List all grid members"""
     members = await dns_service.list_grid_members()
     return {
-        "members": members,
-        "total": len(members)
+        "operation": "list_grid_members",
+        "success": True,
+        "total": len(members),
+        "results": members,
+        "message": f"Retrieved {len(members)} grid members successfully."
+    }
+
+@mcp.tool()
+async def search_dns_record(query: str, zone: str | None = None):
+    """Search DNS A records by IP address, host name, or FQDN."""
+    results = await dns_service.search_dns_record(query, zone)
+    return {
+        "operation": "search_dns_record",
+        "success": True,
+        "total": len(results),
+        "results": results,
+        "message": f"Retrieved {len(results)} matching record(s) successfully."
+    }
+
+@mcp.tool()
+async def health():
+    """Check if the MCP server is healthy"""
+    return {
+        "operation": "health",
+        "success": True,
+        "total": 1,
+        "results": [{"status": "healthy"}],
+        "message": "MCP server is healthy."
+    }
+
+@mcp.tool()
+async def check_ip_usage(ip: str):
+    """Check whether an IP address is currently used by DNS A records."""
+    usage = await dns_service.check_ip_usage(ip)
+    results = usage["results"]
+    status = usage["status"]
+
+    if status == "unused":
+        message = "IP address is not currently used by any DNS A record."
+    elif status == "in_use":
+        message = "IP address is currently used by 1 DNS A record."
+    else:
+        message = f"IP address is currently used by {len(results)} DNS A records."
+
+    return {
+        "operation": "check_ip_usage",
+        "success": True,
+        "status": status,
+        "total": len(results),
+        "results": results,
+        "message": message,
+    }
+
+@mcp.tool()
+async def get_zone_summary(zone: str):
+    """Get a summary of a DNS zone"""
+    summary = await dns_service.get_zone_summary(zone)
+    return {
+        "operation": "get_zone_summary",
+        "success": True,
+        "total": 1,
+        "results": [summary],
+        "message": f"Retrieved summary for zone '{zone}' successfully."
     }
 
 # Run with streamable HTTP transport

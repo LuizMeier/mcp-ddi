@@ -26,11 +26,18 @@ class InfobloxClient:
             # The API returns: [{"_ref": "...", "fqdn": "...", "view": "..."}, ...]
             return [Zone(**zone_data) for zone_data in data]
 
-    async def get_records(self, zone: str):
-        """Retrieve all A records in a specific zone."""
+    async def get_records(self, zone: str, record_type: str = "A"):
+        """Retrieve records from a specific zone."""
+
+        if not zone:
+            # Get all records across all zones if no specific zone is provided
+            endpoint = f"{self.base_url}/allRecords"
+        else:
+            endpoint = f"{self.base_url}/record:{record_type}"
+
         async with httpx.AsyncClient(verify=False) as client:
             resp = await client.get(
-                f"{self.base_url}/record:a",  # Pode adaptar para record:cname, record:ptr etc.
+                endpoint,
                 params={"zone": zone},
                 auth=self.auth,
                 headers=self.headers
@@ -38,6 +45,40 @@ class InfobloxClient:
             resp.raise_for_status()
             data = resp.json()
             # Convert list of dictionaries to list of DNSRecord objects
+            return [DNSRecord(**record_data) for record_data in data]
+
+    async def search_a_records_by_ip(self, ip: str, zone: str | None = None):
+        """Search A records by IPv4 address."""
+        params = {"ipv4addr": ip}
+        if zone:
+            params["zone"] = zone
+
+        async with httpx.AsyncClient(verify=False) as client:
+            resp = await client.get(
+                f"{self.base_url}/record:a",
+                params=params,
+                auth=self.auth,
+                headers=self.headers
+            )
+            resp.raise_for_status()
+            data = resp.json()
+            return [DNSRecord(**record_data) for record_data in data]
+
+    async def search_a_records_by_name(self, name: str, zone: str | None = None):
+        """Search A records by host name or FQDN."""
+        params = {"name": name}
+        if zone:
+            params["zone"] = zone
+
+        async with httpx.AsyncClient(verify=False) as client:
+            resp = await client.get(
+                f"{self.base_url}/record:a",
+                params=params,
+                auth=self.auth,
+                headers=self.headers
+            )
+            resp.raise_for_status()
+            data = resp.json()
             return [DNSRecord(**record_data) for record_data in data]
 
     async def get_grid_members(self):
@@ -48,10 +89,3 @@ class InfobloxClient:
             data = resp.json()
             # Convert list of dictionaries to list of GridMember objects
             return [GridMember(**member_data) for member_data in data]
-
-    async def get_breeds(self):
-        """Retrieve all Breeds."""
-        async with httpx.AsyncClient(verify=False) as client:
-            resp = await client.get("https://dogapi.dog/api/v2/breeds")
-            resp.raise_for_status()
-            return resp.json()

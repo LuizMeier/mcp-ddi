@@ -19,3 +19,4 @@ typing_extensions==4.15.0
 typing-inspection==0.4.2
 mcp==1.21.2
 fastmcp
+fqdn==1.5.0
