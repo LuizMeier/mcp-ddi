@@ -1,6 +1,6 @@
 """Infoblox WAPI client module."""
 import httpx
-from config import WAPI_URL, WAPI_USER, WAPI_PASS
+from config import WAPI_URL, WAPI_USER, WAPI_PASS, WAPI_VERIFY_SSL
 from models import Zone, DNSRecord, GridMember
 
 class InfobloxClient:
@@ -11,10 +11,11 @@ class InfobloxClient:
         self.base_url = WAPI_URL.rstrip("/")
         self.auth = (WAPI_USER, WAPI_PASS)
         self.headers = {"Accept": "application/json"}
+        self.verify_ssl = WAPI_VERIFY_SSL
 
     async def get_zones(self):
         """Retrieve all authoritative DNS zones."""
-        async with httpx.AsyncClient(verify=False) as client:
+        async with httpx.AsyncClient(verify=self.verify_ssl) as client:
             resp = await client.get(
                 f"{self.base_url}/zone_auth?",
                 auth=self.auth,
@@ -35,7 +36,7 @@ class InfobloxClient:
         else:
             endpoint = f"{self.base_url}/record:{record_type}"
 
-        async with httpx.AsyncClient(verify=False) as client:
+        async with httpx.AsyncClient(verify=self.verify_ssl) as client:
             resp = await client.get(
                 endpoint,
                 params={"zone": zone},
@@ -53,7 +54,7 @@ class InfobloxClient:
         if zone:
             params["zone"] = zone
 
-        async with httpx.AsyncClient(verify=False) as client:
+        async with httpx.AsyncClient(verify=self.verify_ssl) as client:
             resp = await client.get(
                 f"{self.base_url}/record:a",
                 params=params,
@@ -70,7 +71,7 @@ class InfobloxClient:
         if zone:
             params["zone"] = zone
 
-        async with httpx.AsyncClient(verify=False) as client:
+        async with httpx.AsyncClient(verify=self.verify_ssl) as client:
             resp = await client.get(
                 f"{self.base_url}/record:a",
                 params=params,
@@ -83,7 +84,7 @@ class InfobloxClient:
 
     async def get_grid_members(self):
         """Retrieve all Grid Members and their statuses."""
-        async with httpx.AsyncClient(verify=False) as client:
+        async with httpx.AsyncClient(verify=self.verify_ssl) as client:
             params = {"_return_fields": "host_name,config_addr_type,host_name,platform,service_type_configuration,vip_setting,service_status"}
             resp = await client.get(
                 f"{self.base_url}/member",
