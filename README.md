@@ -51,8 +51,10 @@ Example:
 export WAPI_URL="https://infoblox.example.com/wapi/v2.13.7"
 export WAPI_USER="your-user"
 export WAPI_PASS="your-password"
-export WAPI_VERIFY_SSL="false"
+export WAPI_VERIFY_SSL="true"
 ```
+
+Keep `WAPI_VERIFY_SSL="false"` only for temporary lab scenarios with a known self-signed certificate.
 
 ## Installation
 
@@ -69,6 +71,15 @@ python3 main.py
 ```
 
 The server uses FastMCP with `streamable-http` transport.
+
+This project returns internal DNS and grid data. Do not expose this MCP endpoint directly to the internet.
+
+Recommended minimum exposure model:
+
+- bind it only to localhost or a private network
+- place it behind an authenticated reverse proxy if remote access is required
+- restrict source IPs to trusted clients only
+- avoid publishing screenshots or examples with real hostnames, IPs, refs, or VIP addresses
 
 By default, the MCP endpoint is exposed at:
 
